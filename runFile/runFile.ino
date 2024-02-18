@@ -1,5 +1,9 @@
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
+#include <Servo.h>
+Servo myServo1;
+Servo myServo2;
+int pos = 0;
 
 #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     #include "Wire.h"
@@ -45,8 +49,11 @@ void dmpDataReady() {
     mpuInterrupt = true;
 }
 
+
 void setup() {
     // join I2C bus (I2Cdev library doesn't do this automatically)
+    myServo1.attach(2);
+    myServo2.attach(3);
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
         Wire.setClock(400000); // 400kHz I2C clock. Comment this line if having compilation difficulties
@@ -136,14 +143,24 @@ void loop() {
             mpu.dmpGetQuaternion(&q, fifoBuffer);
             mpu.dmpGetGravity(&gravity, &q);
             mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            Serial.print("ypr\t");
-            Serial.print(ypr[0] * 180/M_PI);
-            Serial.print("\t");
-            Serial.print(ypr[1] * 180/M_PI);
-            Serial.print("\t");
-            Serial.println(ypr[2] * 180/M_PI);
-        #endif
+            
+            ypr[2] = ypr[2] * 180/M_PI;
+            ypr[2] = map(ypr[2],-180,180,0,180);
+            ypr[1] = ypr[1] * 180/M_PI;
+            ypr[1] = map(ypr[1],-180,180,0,180);
+            myServo1.write(ypr[2]);
+            myServo2.write(ypr[1]);
 
+            Serial.print("ypr\t");
+            Serial.print(ypr[0]);
+            Serial.print("\t");
+            Serial.print(ypr[1]);
+            Serial.print("\t");
+            Serial.println(ypr[2]);
+        #endif
+        
+        
+       
   
         // blink LED to indicate activity
         blinkState = !blinkState;
